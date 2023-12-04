@@ -9,6 +9,24 @@ $(function () {
   var minHour=9;
   var maxHour=17;
 
+  //gets the current hour as a number
+  var currentHour=+(dayjs().format("H"));
+  //gets the current day as a string, formatted how we want to display it
+  var currentDate=dayjs().format("dddd[,] MMMM D[th]");
+
+  //gets the current time, so we know if we have moved to a new hour or day
+  function getTime(){
+    var tempHour=+dayjs().format("H");
+    if (currentHour!=tempHour){
+      currentHour=tempHour;
+      updateHour();
+    }
+    var tempDay=dayjs().format("dddd[,] MMMM D[th]");
+    if (currentDate!=tempDay){
+      currentDate=tempDay;
+      updateDay();
+    }
+  }
   // creates the divs for each hour
   function addHours(){
     for(let i=minHour; i<=maxHour; i++){
@@ -36,7 +54,50 @@ $(function () {
     }
   }
 
+  function updateHour(){
+    // if the current hour is after the max hour, apply past to all of them
+    if(currentHour>maxHour){
+      // applies it to all direct children of the table of hours, so each row
+      hourContainerEl.children().children(".description").addClass("past");
+      return;
+    }
+    // if the current hour is before the starting hour, apply future to all of them 
+    if(currentHour<minHour){
+      hourContainerEl.children().children(".description").addClass("future");
+      return;
+    }
+    // the current hour is in the range, so loop over the before and the after, and apply present to the current
+    // if the current hour is the first or last hour in the range, it doesn't enter that for loop, which is fine
+    for(let i=minHour; i<currentHour; i++){
+      //creates the id to get using the current index
+      let currentId="#hour-"+i;
+      hourContainerEl.children(currentId).children(".description").addClass("past");
+    }
+    hourContainerEl.children("#hour-"+currentHour).children(".description").addClass("present");
+    for(let j=currentHour+1; j<=maxHour; j++){
+      let currentId="#hour-"+j;
+      hourContainerEl.children(currentId).children(".description").addClass("future");
+    }
+  }
+
+  function getEvents(){
+    // loops over all the hours
+    for(let i=minHour; i<=maxHour; i++){
+      // the key uses the same format as the id for the rows for convenience
+      let currentKey="#hour-"+i;
+      let currentText=localStorage.getItem(currentKey);
+      // doesn't enter if there was no event stored, as currentText would be null
+      if(currentText){
+        // finds the proper row, and the textfield within that row, and puts the text of the event there
+        hourContainerEl.children(currentKey).children(".description").text(currentText.trim());
+      }
+    }
+  }
+
+
   addHours();
+  updateHour();
+  getEvents();
   // TODO: Add a listener for click events on the save button. This code should
   // use the id in the containing time-block as a key to save the user input in
   // local storage. HINT: What does `this` reference in the click listener
@@ -44,11 +105,6 @@ $(function () {
   // time-block containing the button that was clicked? How might the id be
   // useful when saving the description in local storage?
   //
-  // TODO: Add code to apply the past, present, or future class to each time
-  // block by comparing the id to the current hour. HINTS: How can the id
-  // attribute of each time-block be used to conditionally add or remove the
-  // past, present, and future classes? How can Day.js be used to get the
-  // current hour in 24-hour time?
   //
   // TODO: Add code to get any user input that was saved in localStorage and set
   // the values of the corresponding textarea elements. HINT: How can the id
