@@ -5,14 +5,18 @@ $(function () {
   // get the containers for all elements that need to be written to
   var dayEl = $('#currentDay');
   var hourContainerEl = $('#hours');
+  var displayEl = $('#messageDisplay')
   // sets the start and end times for the calendar to easily change the time range
   var minHour=9;
   var maxHour=17;
 
   //gets the current hour as a number
   var currentHour=+(dayjs().format("H"));
-  //gets the current day as a string, formatted how we want to display it
-  var currentDate=dayjs().format("dddd[,] MMMM D[th]");
+  //gets the day from storage, to be compared to the current day in getTime later
+  var currentDate=localStorage.getItem("date");
+
+  //displays the current day
+  dayEl.text(currentDate);
 
   //gets the current time, so we know if we have moved to a new hour or day
   function getTime(){
@@ -21,6 +25,7 @@ $(function () {
       currentHour=tempHour;
       updateHour();
     }
+    //gets the current day as a string, formatted how we want to display it
     var tempDay=dayjs().format("dddd[,] MMMM D[th]");
     if (currentDate!=tempDay){
       currentDate=tempDay;
@@ -89,15 +94,32 @@ $(function () {
       // doesn't enter if there was no event stored, as currentText would be null
       if(currentText){
         // finds the proper row, and the textfield within that row, and puts the text of the event there
-        hourContainerEl.children(currentKey).children(".description").text(currentText.trim());
+        hourContainerEl.children(currentKey).children(".description").val(currentText.trim());
       }
     }
   }
 
+  //called if a day has passed, so the calendar needs to be cleared
+  function updateDay(){
+    //updates the date
+    dayEl.text(currentDate);
+    //clears the local storage
+    localStorage.clear();
+    //clears the calendar itself, since the local storage is empty
+    getEvents();
+    //puts the current day in local storage
+    localStorage.setItem("date", currentDate);
+    //alerts the user that the day has changed
+    displayEl.text("Day has changed, so the calendar has been reset");
+  }
+
+  
 
   addHours();
   updateHour();
   getEvents();
+  getTime();
+  
   // TODO: Add a listener for click events on the save button. This code should
   // use the id in the containing time-block as a key to save the user input in
   // local storage. HINT: What does `this` reference in the click listener
@@ -105,10 +127,4 @@ $(function () {
   // time-block containing the button that was clicked? How might the id be
   // useful when saving the description in local storage?
   //
-  //
-  // TODO: Add code to get any user input that was saved in localStorage and set
-  // the values of the corresponding textarea elements. HINT: How can the id
-  // attribute of each time-block be used to do this?
-  //
-  // TODO: Add code to display the current date in the header of the page.
 });
