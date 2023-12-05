@@ -99,32 +99,53 @@ $(function () {
     }
   }
 
-  //called if a day has passed, so the calendar needs to be cleared
+  //called if a day has passed, so let the user know if they need to clear or change any events in the calendar
   function updateDay(){
     //updates the date
     dayEl.text(currentDate);
-    //clears the local storage
-    localStorage.clear();
-    //clears the calendar itself, since the local storage is empty
-    getEvents();
     //puts the current day in local storage
     localStorage.setItem("date", currentDate);
     //alerts the user that the day has changed
-    displayEl.text("Day has changed, so the calendar has been reset");
+    displayEl.text("Day has changed, so you may want to update some events.");
   }
 
-  
+  function buttonClick(event){
+    // gets the current row, the parent of the button that was clicked
+    let currentRow = $(event.target).parent();
+    //if the icon was clicked, we need to go up another parent
+    if(currentRow.hasClass("saveBtn")){
+      currentRow=currentRow.parent();
+    }
+    // gets the id of the current row to store the text
+    let currentId = "#"+currentRow.attr("id");
+    // gets the text in the textarea
+    let eventText = currentRow.children(".description").val().trim();
+    // gets the old text to determine what message to display
+    let oldText=localStorage.getItem(currentId);
+    // saves the event to local storage with key equal to the id
+    localStorage.setItem(currentId, eventText);
+    // displays a message based on whether the new event is empty or not
+    if(eventText!=""){
+      if(!oldText || oldText!=eventText){
+        // the previously stored event did not exist or had different text, so the event was changed
+        displayEl.text("Saved the event to local storage!");
+      } else {
+        // the event is identical to what was already there
+        displayEl.text("The event was already saved.");
+      }
+    } else {
+      // the new event is empty, so if there was a saved event, say it was removed
+      if(oldText && oldText!=""){
+        displayEl.text("Removed the event!");
+      }
+    }
+    // update times in case the hour or day has changed
+    getTime();
+  }
 
   addHours();
   updateHour();
   getEvents();
   getTime();
-  
-  // TODO: Add a listener for click events on the save button. This code should
-  // use the id in the containing time-block as a key to save the user input in
-  // local storage. HINT: What does `this` reference in the click listener
-  // function? How can DOM traversal be used to get the "hour-x" id of the
-  // time-block containing the button that was clicked? How might the id be
-  // useful when saving the description in local storage?
-  //
+  hourContainerEl.on("click", ".saveBtn", buttonClick);
 });
